@@ -66,6 +66,11 @@ static int win_update_name(session_t *ps, struct managed_win *w);
  */
 static void win_update_opacity_prop(session_t *ps, struct managed_win *w);
 static void win_update_opacity_target(session_t *ps, struct managed_win *w);
+
+/***
+ * Reread shadow property of a window.
+*/
+void win_update_shadow_target(session_t *ps, struct managed_win *w);
 /**
  * Retrieve frame extents from a window.
  */
@@ -129,6 +134,8 @@ static inline bool attr_pure win_is_real_visible(const struct managed_win *w) {
 	return w->state != WSTATE_UNMAPPED && w->state != WSTATE_DESTROYING &&
 	       w->state != WSTATE_UNMAPPING;
 }
+
+
 
 /**
  * Update focused state of a window.
@@ -579,12 +586,22 @@ void win_process_image_flags(session_t *ps, struct managed_win *w) {
 				win_release_shadow(ps->backend_data, w);
 			}
 			if (w->shadow) {
-				win_bind_shadow(ps->backend_data, w,
+				if (w->focused){
+					win_bind_shadow(ps->backend_data, w,
 				                (struct color){.red = ps->o.shadow_red,
 				                               .green = ps->o.shadow_green,
 				                               .blue = ps->o.shadow_blue,
 				                               .alpha = ps->o.shadow_opacity},
 				                ps->shadow_context);
+				}
+				else {
+					win_bind_shadow(ps->backend_data, w,
+				                (struct color){.red = ps->o.shadow_red_focus,
+				                               .green = ps->o.shadow_green_focus,
+				                               .blue = ps->o.shadow_blue_focus,
+				                               .alpha = ps->o.shadow_opacity},
+				                ps->shadow_context);
+				}
 			}
 		}
 
@@ -1245,7 +1262,7 @@ void win_on_factor_change(session_t *ps, struct managed_win *w) {
 	    c2_match(ps, w, ps->o.transparent_clipping_blacklist, NULL);
 
 	win_update_opacity_target(ps, w);
-
+	win_update_shadow_target(ps, w);
 	w->reg_ignore_valid = false;
 }
 
@@ -2554,10 +2571,30 @@ void map_win_start(session_t *ps, struct managed_win *w) {
 }
 
 /**
+ * Updates the target shadow color, if it has a shadow.
+*/
+void win_update_shadow_target(session_t *ps, struct managed_win *w){
+	const char* s = (w->shadow == true) ? "true" : "false";
+	log_error(s);
+	if (w->shadow){
+		if (w->focused){
+			// w->shadow_image = ps->backend_data->ops->shadow_from_mask(ps->backend_data,
+			// w->mask_image, ps->shadow_context, (struct color){.red = ps->o.shadow_red,
+			// 	                               .green = ps->o.shadow_green,
+			// 	                               .blue = ps->o.shadow_blue,
+			// 	                               .alpha = ps->o.shadow_opacity});
+			log_error("Focused window changed!");
+		}
+	}
+
+}
+
+/**
  * Update target window opacity depending on the current state.
  */
 void win_update_opacity_target(session_t *ps, struct managed_win *w) {
 	auto opacity_target_old = w->opacity_target;
+	
 	w->opacity_target = win_calc_opacity_target(ps, w);
 
 	if (opacity_target_old == w->opacity_target) {
@@ -2605,6 +2642,7 @@ void win_update_opacity_target(session_t *ps, struct managed_win *w) {
 	if (!ps->redirected) {
 		CHECK(!win_skip_fading(ps, w));
 	}
+	// Will calling bind shadow multiple times break things...
 }
 
 /**

@@ -672,6 +672,7 @@ static void paint_root(session_t *ps, const region_t *reg_paint) {
  * Generate shadow <code>Picture</code> for a window.
  */
 static bool win_build_shadow(session_t *ps, struct managed_win *w, double opacity) {
+	printf("wowza3");
 	const int width = w->widthb;
 	const int height = w->heightb;
 	// log_trace("(): building shadow for %s %d %d", w->name, width, height);
@@ -710,6 +711,88 @@ static bool win_build_shadow(session_t *ps, struct managed_win *w, double opacit
 
 	xcb_image_put(ps->c.c, shadow_pixmap, gc, shadow_image, 0, 0, 0);
 	xcb_render_composite(ps->c.c, XCB_RENDER_PICT_OP_SRC, ps->cshadow_picture,
+	                     shadow_picture, shadow_picture_argb, 0, 0, 0, 0, 0, 0,
+	                     shadow_image->width, shadow_image->height);
+
+	assert(!w->shadow_paint.pixmap);
+	w->shadow_paint.pixmap = shadow_pixmap_argb;
+	assert(!w->shadow_paint.pict);
+	w->shadow_paint.pict = shadow_picture_argb;
+
+	xcb_free_gc(ps->c.c, gc);
+	xcb_image_destroy(shadow_image);
+	xcb_free_pixmap(ps->c.c, shadow_pixmap);
+	x_free_picture(&ps->c, shadow_picture);
+
+	return true;
+
+shadow_picture_err:
+	if (shadow_image) {
+		xcb_image_destroy(shadow_image);
+	}
+	if (shadow_pixmap) {
+		xcb_free_pixmap(ps->c.c, shadow_pixmap);
+	}
+	if (shadow_pixmap_argb) {
+		xcb_free_pixmap(ps->c.c, shadow_pixmap_argb);
+	}
+	if (shadow_picture) {
+		x_free_picture(&ps->c, shadow_picture);
+	}
+	if (shadow_picture_argb) {
+		x_free_picture(&ps->c, shadow_picture_argb);
+	}
+	if (gc) {
+		xcb_free_gc(ps->c.c, gc);
+	}
+
+	return false;
+}
+
+/**
+ * Builds the focussed shadow image
+*/
+static bool win_build_focus_shadow(session_t *ps, struct managed_win *w, double opacity) {
+	log_error("wowza");
+	printf("wowza2");
+	const int width = w->widthb;
+	const int height = w->heightb;
+	// log_trace("(): building shadow for %s %d %d", w->name, width, height);
+
+	xcb_image_t *shadow_image = NULL;
+	xcb_pixmap_t shadow_pixmap = XCB_NONE, shadow_pixmap_argb = XCB_NONE;
+	xcb_render_picture_t shadow_picture = XCB_NONE, shadow_picture_argb = XCB_NONE;
+	xcb_gcontext_t gc = XCB_NONE;
+
+	shadow_image =
+	    make_shadow(&ps->c, (conv *)ps->shadow_context, opacity, width, height);
+	if (!shadow_image) {
+		log_error("failed to make shadow");
+		return XCB_NONE;
+	}
+
+	shadow_pixmap = x_create_pixmap(&ps->c, 8, shadow_image->width, shadow_image->height);
+	shadow_pixmap_argb =
+	    x_create_pixmap(&ps->c, 32, shadow_image->width, shadow_image->height);
+
+	if (!shadow_pixmap || !shadow_pixmap_argb) {
+		log_error("failed to create shadow pixmaps");
+		goto shadow_picture_err;
+	}
+
+	shadow_picture = x_create_picture_with_standard_and_pixmap(
+	    &ps->c, XCB_PICT_STANDARD_A_8, shadow_pixmap, 0, NULL);
+	shadow_picture_argb = x_create_picture_with_standard_and_pixmap(
+	    &ps->c, XCB_PICT_STANDARD_ARGB_32, shadow_pixmap_argb, 0, NULL);
+	if (!shadow_picture || !shadow_picture_argb) {
+		goto shadow_picture_err;
+	}
+
+	gc = x_new_id(&ps->c);
+	xcb_create_gc(ps->c.c, gc, shadow_pixmap, 0, NULL);
+
+	xcb_image_put(ps->c.c, shadow_pixmap, gc, shadow_image, 0, 0, 0);
+	xcb_render_composite(ps->c.c, XCB_RENDER_PICT_OP_SRC, ps->cshadow_focus_picture,
 	                     shadow_picture, shadow_picture_argb, 0, 0, 0, 0, 0, 0,
 	                     shadow_image->width, shadow_image->height);
 
@@ -988,6 +1071,7 @@ win_blur_background(session_t *ps, struct managed_win *w, xcb_render_picture_t t
 /// region = ??
 /// region_real = the damage region
 void paint_all(session_t *ps, struct managed_win *t) {
+	log_error("Painting all windows");
 	if (ps->o.xrender_sync_fence || (ps->drivers & DRIVER_NVIDIA)) {
 		if (ps->xsync_exists && !x_fence_sync(&ps->c, ps->sync_fence)) {
 			log_error("x_fence_sync failed, xrender-sync-fence will be "
@@ -1088,10 +1172,22 @@ void paint_all(session_t *ps, struct managed_win *t) {
 		// Painting shadow
 		if (w->shadow) {
 			// Lazy shadow building
-			if (!w->shadow_paint.pixmap) {
-				if (!win_build_shadow(ps, w, 1)) {
-					log_error("build shadow failed");
+			if (w->focused){
+				if (!w->shadow_paint.pixmap) {
+					log_error("Focused window!");
+					printf("wowza4");
+					if (!win_build_focus_shadow(ps, w, 1)){
+						log_error("build focus shadow failed");
+					}
 				}
+			}
+			else {
+				if (!w->shadow_paint.pixmap) {
+					printf("wowza5");
+					if (!win_build_shadow(ps, w, 1)) {
+						log_error("build shadow failed");
+					}
+			}
 			}
 
 			// Shadow doesn't need to be painted underneath the body
@@ -1468,6 +1564,14 @@ bool init_render(session_t *ps) {
 			return false;
 		}
 	}
+	if (ps->o.shadow_red_focus == 0 && ps->o.shadow_blue_focus == 0 && ps->o.shadow_green_focus){
+		ps->cshadow_focus_picture = ps->black_picture;
+	}
+	else {
+		ps->cshadow_focus_picture = solid_picture(&ps->c, true, 1, ps->o.shadow_red_focus,
+		ps->o.shadow_green_focus, ps->o.shadow_blue_focus);
+		//TODO: XCB_NONE check
+	}
 
 	// Initialize our rounded corners fragment shader
 	if (ps->o.corner_radius > 0 && ps->o.backend == BKEND_GLX) {
@@ -1516,7 +1620,7 @@ void deinit_render(session_t *ps) {
 
 	x_free_picture(&ps->c, ps->black_picture);
 	x_free_picture(&ps->c, ps->white_picture);
-	ps->cshadow_picture = ps->black_picture = ps->white_picture = XCB_NONE;
+	ps->cshadow_picture = ps->black_picture = ps->white_picture = ps->cshadow_focus_picture = XCB_NONE;
 
 	// Free other X resources
 	free_root_tile(ps);

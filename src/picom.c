@@ -1937,6 +1937,7 @@ static session_t *session_init(int argc, char **argv, Display *dpy,
 
 	    .black_picture = XCB_NONE,
 	    .cshadow_picture = XCB_NONE,
+		.cshadow_focus_picture = XCB_NONE,
 	    .white_picture = XCB_NONE,
 	    .shadow_context = NULL,
 

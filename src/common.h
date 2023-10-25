@@ -301,6 +301,8 @@ typedef struct session {
 	xcb_render_picture_t black_picture;
 	/// 1x1 Picture of the shadow color.
 	xcb_render_picture_t cshadow_picture;
+	// 1x1 Picture of the focussed shadow color
+	xcb_render_picture_t cshadow_focus_picture;
 	/// 1x1 white Picture.
 	xcb_render_picture_t white_picture;
 	/// Backend shadow context.
