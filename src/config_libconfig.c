@@ -404,6 +404,9 @@ char *parse_config_libconfig(options_t *opt, const char *config_file, bool *shad
 	config_lookup_float(&cfg, "shadow-green", &opt->shadow_green);
 	// --shadow-blue
 	config_lookup_float(&cfg, "shadow-blue", &opt->shadow_blue);
+	config_lookup_float(&cfg, "shadow_red_focus", &opt->shadow_red_focus);
+	config_lookup_float(&cfg, "shadow_blue_focus", &opt->shadow_blue_focus);
+	config_lookup_float(&cfg, "shadow_green_focus", &opt->shadow_green_focus);
 	// --shadow-color
 	if (config_lookup_string(&cfg, "shadow-color", &sval)) {
 		struct color rgb;

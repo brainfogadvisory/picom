@@ -475,7 +475,7 @@ bool get_cfg(options_t *opt, int argc, char *const *argv, bool shadow_enable,
 		case 3332:
 			opt->shadow_blue_focus = atof(optarg);
 			break;
-		case 3332:
+		case 3333:
 			opt->shadow_green_focus = atof(optarg);
 			break;
 		case 258:

@@ -1213,6 +1213,7 @@ static bool cdbus_process_opts_get(session_t *ps, DBusMessage *msg) {
 
 	cdbus_m_opts_get_do(shadow_red, cdbus_reply_double);
 	cdbus_m_opts_get_do(shadow_green, cdbus_reply_double);
+	cdbus_m_opts_get_do(shadow_green_focus, cdbus_reply_double);
 	cdbus_m_opts_get_do(shadow_blue, cdbus_reply_double);
 	cdbus_m_opts_get_do(shadow_radius, cdbus_reply_int32);
 	cdbus_m_opts_get_do(shadow_offset_x, cdbus_reply_int32);
