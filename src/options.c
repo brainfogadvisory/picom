@@ -44,6 +44,9 @@ static const struct picom_option picom_options[] = {
     {"fade-in-step"                , required_argument, 'I', NULL          , "Opacity change between steps while fading in. (default 0.028)"},
     {"fade-out-step"               , required_argument, 'O', NULL          , "Opacity change between steps while fading out. (default 0.03)"},
     {"fade-delta"                  , required_argument, 'D', NULL          , "The time between steps in a fade in milliseconds. (default 10)"},
+	{"shadow-focus-red"			   , required_argument,  3331, NULL        , "The red shadow color of the focused window."},
+	{"shadow-focus-blue"		   , required_argument,  3332, NULL        , "The blue of the focused window."},
+	{"shadow-focus-green"		   , required_argument,  3333, NULL        , "The green color of the focused window."},
     {"menu-opacity"                , required_argument, 'm', NULL          , "The opacity for menus. (default 1.0)"},
     {"shadow"                      , no_argument      , 'c', NULL          , "Enabled client-side shadows on windows."},
     {"clear-shadow"                , no_argument      , 'z', NULL          , "Don't draw shadow behind the window."},
@@ -466,6 +469,15 @@ bool get_cfg(options_t *opt, int argc, char *const *argv, bool shadow_enable,
 			// --shadow-red
 			opt->shadow_red = atof(optarg);
 			break;
+		case 3331:
+			opt->shadow_red_focus = atof(optarg);
+			break;
+		case 3332:
+			opt->shadow_blue_focus = atof(optarg);
+			break;
+		case 3332:
+			opt->shadow_green_focus = atof(optarg);
+			break;
 		case 258:
 			// --shadow-green
 			opt->shadow_green = atof(optarg);
@@ -824,6 +836,9 @@ bool get_cfg(options_t *opt, int argc, char *const *argv, bool shadow_enable,
 	opt->shadow_red = normalize_d(opt->shadow_red);
 	opt->shadow_green = normalize_d(opt->shadow_green);
 	opt->shadow_blue = normalize_d(opt->shadow_blue);
+	opt->shadow_red_focus = normalize_d(opt->shadow_red_focus);
+	opt->shadow_blue_focus = normalize_d(opt->shadow_blue_focus);
+	opt->shadow_green_focus = normalize_d(opt->shadow_green_focus);
 	opt->inactive_dim = normalize_d(opt->inactive_dim);
 	opt->frame_opacity = normalize_d(opt->frame_opacity);
 	opt->shadow_opacity = normalize_d(opt->shadow_opacity);
