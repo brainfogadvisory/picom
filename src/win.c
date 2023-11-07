@@ -2575,15 +2575,41 @@ void map_win_start(session_t *ps, struct managed_win *w) {
 */
 void win_update_shadow_target(session_t *ps, struct managed_win *w){
 	const char* s = (w->shadow == true) ? "true" : "false";
-	log_error(s);
 	if (w->shadow){
 		if (w->focused){
+			// Update the shadow of the window here!
+			// ps->backend_data->ops->release_image(ps->backend_data, w->shadow_image);
+			struct backend_t *bd = ps->backend_data;
+			struct managed_win *mw = w->shadow_image;
+			log_error("after pointin");
+
+			// Out with the old..
+			win_release_shadow(ps->backend_data, w);
+
+			// And in with the new!
+			win_bind_shadow(ps->backend_data, w,
+				                (struct color){.red = ps->o.shadow_red,
+				                               .green = ps->o.shadow_green,
+				                               .blue = ps->o.shadow_blue,
+				                               .alpha = ps->o.shadow_opacity},
+				                ps->shadow_context);
+
+			//auto c = xcb_render_frxc
+
+			// struct xrender_image *img = w->shadow_image;
+			// release_rounded_corner_cache(ps->backend_data, img->rounded_rectangle);
+			// img->rounded_rectangle = NULL;
+			// img->base.inner->refcount -= 1;
+			// if (img->ps->backend_data.inner->refcount == 0) {
+			// 	release_image_inner(ps->backend_data, (void *)img->base.inner);
+			// }
+
 			// w->shadow_image = ps->backend_data->ops->shadow_from_mask(ps->backend_data,
 			// w->mask_image, ps->shadow_context, (struct color){.red = ps->o.shadow_red,
 			// 	                               .green = ps->o.shadow_green,
 			// 	                               .blue = ps->o.shadow_blue,
 			// 	                               .alpha = ps->o.shadow_opacity});
-			log_error("Focused window changed!");
+			//log_error("Heres where we update the shadow image!");
 		}
 	}
 

@@ -319,6 +319,7 @@ void *default_backend_render_shadow(backend_t *backend_data, int width, int heig
 void *
 backend_render_shadow_from_mask(backend_t *backend_data, int width, int height,
                                 struct backend_shadow_context *sctx, struct color color) {
+	log_error("BackendRender ShadowFromMask!");
 	region_t reg;
 	pixman_region32_init_rect(&reg, 0, 0, (unsigned int)width, (unsigned int)height);
 	void *mask = backend_data->ops->make_mask(

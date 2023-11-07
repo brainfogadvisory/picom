@@ -567,6 +567,7 @@ release_rounded_corner_cache(backend_t *base, struct xrender_rounded_rectangle_c
 }
 
 static void release_image(backend_t *base, void *image) {
+	log_error("Releasing image!");
 	struct xrender_image *img = image;
 	release_rounded_corner_cache(base, img->rounded_rectangle);
 	img->rounded_rectangle = NULL;

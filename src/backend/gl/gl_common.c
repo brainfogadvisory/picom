@@ -1251,7 +1251,7 @@ void gl_destroy_shadow_context(backend_t *base attr_unused, struct backend_shado
 
 void *gl_shadow_from_mask(backend_t *base, void *mask,
                           struct backend_shadow_context *sctx, struct color color) {
-	log_debug("Create shadow from mask");
+	log_error("Create shadow from mask");
 	auto gd = (struct gl_data *)base;
 	auto img = (struct backend_image *)mask;
 	auto inner = (struct gl_texture *)img->inner;
